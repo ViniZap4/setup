@@ -51,7 +51,7 @@ alias tls="tmux ls"
 alias tn="tmux new -t"
 # eza
 alias e='eza -lha --icons --color=always --git'
-alias et='eza -lha --icons --color=always --tree --level=3'
+alias et='eza -lha --icons --color=always --tree --level=3 -I .git'
 alias eta='eza -lha --icons --color=always --tree'
 
 # ───────────────────────────── setting ───────────────────────────
