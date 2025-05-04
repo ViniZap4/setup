@@ -34,6 +34,9 @@ zstyle ':completion::complete:*' use-cache on
 zstyle ':completion::complete:*' cache-path ~/.zsh/cache
 compinit -C -i
 
+# ──────────────────────────── bat setup ──────────────────────────
+export BAT_THEME="tokyonight_night"
+
 # ───────────────────────────── Aliases ───────────────────────────
 
 # nvim
@@ -62,7 +65,11 @@ export EDITOR=nvim
 
 # add zsh-autosuggestions
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source ~/dotfiles/miniSettings.sh
+
+# ──────────────────────────── run Custom ──────────────────────────
+if [ -d "$HOME/setup/custom/.zshrc" ]; then
+	source ~/setup/custom/.zshrc
+fi
 
 # ─────────────────────────── Show timings ────────────────────────
 #zprof
