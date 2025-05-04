@@ -98,7 +98,21 @@ else
 fi
 echo
 
-# 3) Oh My Zsh
+
+# 3) eza
+if brew list eza &>/dev/null; then
+  read -q "?eza already installed. Upgrade them? (y/N) " yn; echo
+  if [[ $yn =~ ^[Yy]$ ]]; then
+    run_step "Upgrading eza" brew upgrade eza
+  else
+    echo "→ Skipping eza upgrade."
+  fi
+else
+  run_step "Installing eza" brew install eza
+fi
+echo
+
+# 4) Oh My Zsh
 if [ -d "$HOME/.oh-my-zsh" ]; then
   read -q "?Oh My Zsh is already present. Update it? (y/N) " yn; echo
   if [[ $yn =~ ^[Yy]$ ]]; then
@@ -111,7 +125,7 @@ else
 fi
 echo
 
-# 4) Neovim, tmux, nvm, GitHub CLI
+# 5) Neovim, tmux, nvm, GitHub CLI
 pkgs=(neovim tmux nvm gh)
 any_installed=false
 for p in ${pkgs[@]}; do
@@ -130,7 +144,7 @@ else
 fi
 echo
 
-# 5) zsh-autosuggestions
+# 6) zsh-autosuggestions
 if brew list zsh-autosuggestions &>/dev/null; then
   read -q "?zsh-autosuggestions already installed. Upgrade it? (y/N) " yn; echo
   if [[ $yn =~ ^[Yy]$ ]]; then
