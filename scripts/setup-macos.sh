@@ -1,81 +1,146 @@
 #!/usr/bin/env zsh
 
 # ----------------------------------------
-# VARIABLES
+# COLORS & FORMATTING
 # ----------------------------------------
-BREW_BIN="/opt/homebrew/bin/brew"           # adjust if needed
-OH_MY_ZSH_URL="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
-DOTFILES_REPO="git@github.com:Vinizap4/dotfiles.git"
-DOTFILES_DIR="$HOME/dotfiles"
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+BOLD=$(tput bold)
+RESET=$(tput sgr0)
 
 # ----------------------------------------
-# 1. Homebrew
+# SPINNER FUNCTION
 # ----------------------------------------
-install_homebrew() {
-  if ! command -v brew >/dev/null; then
-    echo "➡️  Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    echo 'eval "$('"${BREW_BIN}"' shellenv)"' >> ~/.zshrc
-    eval "$(${BREW_BIN} shellenv)"
-  else
-    echo "✅ Homebrew already installed; updating..."
-    brew update
-  fi
+spinner() {
+  local pid=$1
+  local msg=$2
+  local delay=0.1
+  local spinstr='|/-\'
+  while kill -0 "$pid" 2>/dev/null; do
+    for c in $spinstr; do
+      echo -ne "\r${BLUE}$c${RESET} $msg..."
+      sleep $delay
+    done
+  done
+  echo -ne "\r"
 }
 
 # ----------------------------------------
-# 2. Oh My Zsh (keeps your zshrc alone)
+# RUN A STEP WITH RETRIES & PROGRESS
 # ----------------------------------------
-install_oh_my_zsh() {
-  if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    echo "➡️  Installing Oh My Zsh (won’t overwrite ~/.zshrc)..."
-    RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
-      sh -c "$(curl -fsSL $OH_MY_ZSH_URL)"
-  else
-    echo "✅ Oh My Zsh already present"
-  fi
+CURRENT_STEP=0
+TOTAL_STEPS=5
+
+run_step() {
+  local desc="$1"; shift
+  local cmd=("$@")
+  ((CURRENT_STEP++))
+  echo "${BOLD}Step $CURRENT_STEP/$TOTAL_STEPS:${RESET} $desc"
+
+  local retries=0
+  local max_retries=3
+
+  while (( retries < max_retries )); do
+    "${cmd[@]}" &   # start in background
+    spinner $! "$desc"
+    wait $!
+    local status=$?
+
+    if (( status == 0 )); then
+      echo "${GREEN}✔${RESET} $desc succeeded"
+      return 0
+    else
+      ((retries++))
+      echo "${YELLOW}⚠ Attempt $retries/$max_retries failed for '$desc'${RESET}"
+      if (( retries < max_retries )); then
+        echo "   Retrying..."
+      else
+        echo "${RED}✖ Giving up on '$desc' and moving on.${RESET}"
+      fi
+    fi
+  done
+
+  return 1
 }
 
 # ----------------------------------------
-# 3. Yazi + dependencies
+# MAIN INSTALLATION SEQUENCE
 # ----------------------------------------
-install_yazi() {
-  echo "➡️  Installing Yazi and its dependencies..."
-  brew install yazi ffmpeg p7zip jq poppler fd ripgrep fzf zoxide resvg imagemagick
-
-  # (Optional) Nerd font for icons
-  brew tap homebrew/cask-fonts
-  brew install --cask font-symbols-only-nerd-font
-}
-
-# ----------------------------------------
-# 4. Neovim, tmux, nvm
-# ----------------------------------------
-install_editors_and_tmux() {
-  echo "➡️  Installing Neovim, tmux, and nvm..."
-  brew install neovim tmux nvm gh
-}
-
-# ----------------------------------------
-# 5. zsh-autosuggestions
-# ----------------------------------------
-install_zsh_autosuggestions() {
-  echo "➡️  Installing zsh-autosuggestions via Homebrew..."
-  brew install zsh-autosuggestions
-  # your own ~/.zshrc should already source it
-}
-
-
-# ----------------------------------------
-# MAIN
-# ----------------------------------------
-echo "🚀  Starting macOS Zsh environment bootstrap…"
-
-install_homebrew
-install_oh_my_zsh
-install_yazi
-install_editors_and_tmux
-install_zsh_autosuggestions
-
+echo "${BOLD}${BLUE}🚀  Starting macOS Zsh environment bootstrap…${RESET}"
 echo
-echo "🎉  All done! Restart your terminal or run ‘source ~/.zshrc’ when you’re ready."
+
+# 1) Homebrew
+if ! command -v brew &>/dev/null; then
+  run_step "Installing Homebrew" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+else
+  read -q "?Homebrew is already installed. Update it? (y/N) " yn; echo
+  if [[ $yn =~ ^[Yy]$ ]]; then
+    run_step "Updating Homebrew" brew update
+  else
+    echo "→ Skipping Homebrew update."
+  fi
+fi
+echo
+
+# 2) Yazi + dependencies
+deps=(yazi ffmpeg p7zip jq poppler fd ripgrep fzf zoxide resvg imagemagick)
+if brew list yazi &>/dev/null; then
+  read -q "?Yazi & dependencies already installed. Upgrade them? (y/N) " yn; echo
+  if [[ $yn =~ ^[Yy]$ ]]; then
+    run_step "Upgrading Yazi & dependencies" brew upgrade yazi ${deps[@]:1}
+  else
+    echo "→ Skipping Yazi & dependencies upgrade."
+  fi
+else
+  run_step "Installing Yazi & dependencies" brew install ${deps[@]}
+fi
+echo
+
+# 3) Oh My Zsh
+if [ -d "$HOME/.oh-my-zsh" ]; then
+  read -q "?Oh My Zsh is already present. Update it? (y/N) " yn; echo
+  if [[ $yn =~ ^[Yy]$ ]]; then
+    run_step "Updating Oh My Zsh" sh "${ZSH:-$HOME/.oh-my-zsh}/tools/upgrade.sh"
+  else
+    echo "→ Skipping Oh My Zsh update."
+  fi
+else
+  run_step "Installing Oh My Zsh" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+echo
+
+# 4) Neovim, tmux, nvm, GitHub CLI
+pkgs=(neovim tmux nvm gh)
+any_installed=false
+for p in ${pkgs[@]}; do
+  if brew list $p &>/dev/null; then any_installed=true; break; fi
+done
+
+if $any_installed; then
+  read -q "?Neovim, tmux, nvm, or gh already installed. Upgrade them? (y/N) " yn; echo
+  if [[ $yn =~ ^[Yy]$ ]]; then
+    run_step "Upgrading Neovim, tmux, nvm & GitHub CLI" brew upgrade ${pkgs[@]}
+  else
+    echo "→ Skipping upgrade of Neovim/tmux/nvm/gh."
+  fi
+else
+  run_step "Installing Neovim, tmux, nvm & GitHub CLI" brew install ${pkgs[@]}
+fi
+echo
+
+# 5) zsh-autosuggestions
+if brew list zsh-autosuggestions &>/dev/null; then
+  read -q "?zsh-autosuggestions already installed. Upgrade it? (y/N) " yn; echo
+  if [[ $yn =~ ^[Yy]$ ]]; then
+    run_step "Upgrading zsh-autosuggestions" brew upgrade zsh-autosuggestions
+  else
+    echo "→ Skipping zsh-autosuggestions upgrade."
+  fi
+else
+  run_step "Installing zsh-autosuggestions" brew install zsh-autosuggestions
+fi
+echo
+
+echo "${GREEN}${BOLD}🎉 All done!${RESET}  Restart your terminal or run ${BOLD}source ~/.zshrc${RESET} to apply changes."
