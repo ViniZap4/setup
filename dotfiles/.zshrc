@@ -47,6 +47,7 @@ alias nrd="npm run dev"
 alias nrt="npm run test"
 alias nrs="npm run storybook"
 alias ni="npm install"
+alias cni="rm -rf node_modules && npm install"
 # tmux
 alias t="tmux"
 alias ta="tmux attach -t"
