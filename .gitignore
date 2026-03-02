@@ -1,1 +1,7 @@
-/custom/**
+# Build output
+/bin/
+
+# Go
+*.exe
+*.test
+*.out
