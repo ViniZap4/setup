@@ -2,7 +2,7 @@ BINARY  := setup
 BIN_DIR := bin
 CMD     := ./cmd/setup
 
-.PHONY: build install clean run status
+.PHONY: build install clean run status lint-install
 
 build:
 	go build -o $(BIN_DIR)/$(BINARY) $(CMD)
@@ -27,3 +27,6 @@ init-submodules:
 
 update-submodules:
 	git submodule update --remote --merge
+
+lint-install:
+	shellcheck install.sh

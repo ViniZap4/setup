@@ -50,6 +50,8 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		a.width = msg.Width
 		a.height = msg.Height
+		a.installer.width = msg.Width
+		a.summary.width = msg.Width
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -183,7 +185,8 @@ func (a App) updateInstaller(msg tea.Msg) (tea.Model, tea.Cmd) {
 	a.installer, cmd = a.installer.Update(msg)
 
 	if a.installer.done {
-		a.summary = NewSummaryModel(a.installer.results)
+		a.summary = NewSummaryModel(a.installer.results, a.installer.elapsed)
+		a.summary.width = a.width
 		a.currentView = ViewSummary
 		return a, nil
 	}

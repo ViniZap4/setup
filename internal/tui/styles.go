@@ -75,4 +75,10 @@ var (
 	HelpStyle = lipgloss.NewStyle().
 			Foreground(Overlay0).
 			MarginTop(1)
+
+	TimerStyle = lipgloss.NewStyle().
+			Foreground(Overlay1)
+
+	HeaderStyle = lipgloss.NewStyle().
+			Foreground(Subtext1)
 )

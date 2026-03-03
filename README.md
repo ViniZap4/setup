@@ -2,6 +2,19 @@
 
 Modular dotfiles manager — each config lives in its own repo as a git submodule, managed by a Go TUI.
 
+## Bootstrap
+
+Run the install script on a fresh machine (requires SSH access to GitHub):
+
+```bash
+bash install.sh
+```
+
+> Since the repo is private, `curl | bash` from `raw.githubusercontent.com` won't work.
+> Copy the script manually, host it as a public Gist, or clone the repo first.
+
+The script detects your OS/arch, installs Go if missing, clones the repo, builds the binary, and launches the TUI.
+
 ## Quick start
 
 ```bash
