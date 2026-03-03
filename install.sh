@@ -10,10 +10,10 @@ DIM='\033[38;2;108;112;134m'
 RESET='\033[0m'
 BOLD='\033[1m'
 
-REPO_URL="git@github.com:ViniZap4/setup.git"
+REPO_URL="https://github.com/ViniZap4/setup.git"
 SETUP_DIR="$HOME/setup"
 GO_VERSION="1.24.2"
-TOTAL_STEPS=5
+TOTAL_STEPS=4
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 step() {
@@ -65,20 +65,9 @@ step1_platform() {
     ok "$OS ($ARCH)"
 }
 
-# ── Step 2: Check SSH access ────────────────────────────────────────────────
-step2_ssh() {
-    step 2 "Checking SSH access to GitHub"
-
-    if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
-        ok "SSH authenticated"
-    else
-        fail "SSH authentication failed — run 'ssh-keygen' and add key to GitHub"
-    fi
-}
-
-# ── Step 3: Install Go ──────────────────────────────────────────────────────
-step3_go() {
-    step 3 "Ensuring Go $GO_VERSION is installed"
+# ── Step 2: Install Go ──────────────────────────────────────────────────────
+step2_go() {
+    step 2 "Ensuring Go $GO_VERSION is installed"
 
     if command -v go &>/dev/null; then
         CURRENT_GO=$(go version | awk '{print $3}' | sed 's/go//')
@@ -97,7 +86,6 @@ step3_go() {
             fi
             dim "Installing Go via Homebrew..."
             brew install go@${GO_VERSION%.*} || brew upgrade go@${GO_VERSION%.*} || true
-            # Link if not already
             brew link --overwrite go@${GO_VERSION%.*} 2>/dev/null || true
             ;;
         linux|wsl)
@@ -119,9 +107,9 @@ step3_go() {
     fi
 }
 
-# ── Step 4: Clone or update repo ────────────────────────────────────────────
-step4_repo() {
-    step 4 "Setting up repository"
+# ── Step 3: Clone or update repo ────────────────────────────────────────────
+step3_repo() {
+    step 3 "Setting up repository"
 
     if [ -d "$SETUP_DIR/.git" ]; then
         dim "Pulling latest changes..."
@@ -135,9 +123,9 @@ step4_repo() {
     fi
 }
 
-# ── Step 5: Build and install ────────────────────────────────────────────────
-step5_build() {
-    step 5 "Building setup binary"
+# ── Step 4: Build and install ────────────────────────────────────────────────
+step4_build() {
+    step 4 "Building setup binary"
 
     cd "$SETUP_DIR"
 
@@ -149,7 +137,6 @@ step5_build() {
     cp bin/setup "$HOME/.local/bin/setup"
     ok "Installed to ~/.local/bin/setup"
 
-    # Ensure ~/.local/bin is in PATH
     if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
         warn "Add ~/.local/bin to your PATH"
         dim "  export PATH=\"\$HOME/.local/bin:\$PATH\""
@@ -161,10 +148,9 @@ main() {
     printf "\n${MAUVE}${BOLD}setup${RESET} ${DIM}— modular dotfiles manager${RESET}\n"
 
     step1_platform
-    step2_ssh
-    step3_go
-    step4_repo
-    step5_build
+    step2_go
+    step3_repo
+    step4_build
 
     printf "\n${GREEN}${BOLD}Done!${RESET} Launching setup TUI...\n\n"
     exec "$SETUP_DIR/bin/setup"
