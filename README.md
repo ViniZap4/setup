@@ -4,21 +4,16 @@ Modular dotfiles manager — each config lives in its own repo as a git submodul
 
 ## Bootstrap
 
-Run the install script on a fresh machine (requires SSH access to GitHub):
-
 ```bash
-bash install.sh
+curl -fsSL https://raw.githubusercontent.com/ViniZap4/setup/feat/submodule-architecture/install.sh | bash
 ```
-
-> Since the repo is private, `curl | bash` from `raw.githubusercontent.com` won't work.
-> Copy the script manually, host it as a public Gist, or clone the repo first.
 
 The script detects your OS/arch, installs Go if missing, clones the repo, builds the binary, and launches the TUI.
 
 ## Quick start
 
 ```bash
-git clone --recursive git@github.com:ViniZap4/setup.git ~/setup
+git clone --recursive https://github.com/ViniZap4/setup.git ~/setup
 cd ~/setup
 make build
 ./bin/setup

@@ -1,24 +1,24 @@
 [submodule "modules/zsh-config"]
 	path = modules/zsh-config
-	url = git@github.com:ViniZap4/zsh-config.git
+	url = https://github.com/ViniZap4/zsh-config.git
 [submodule "modules/oh-my-zsh-theme-vini4"]
 	path = modules/oh-my-zsh-theme-vini4
-	url = git@github.com:ViniZap4/oh-my-zsh-theme-vini4.git
+	url = https://github.com/ViniZap4/oh-my-zsh-theme-vini4.git
 [submodule "modules/kitty-config"]
 	path = modules/kitty-config
-	url = git@github.com:ViniZap4/kitty-config.git
+	url = https://github.com/ViniZap4/kitty-config.git
 [submodule "modules/yazi-config"]
 	path = modules/yazi-config
-	url = git@github.com:ViniZap4/yazi-config.git
+	url = https://github.com/ViniZap4/yazi-config.git
 [submodule "modules/gitconfig"]
 	path = modules/gitconfig
-	url = git@github.com:ViniZap4/gitconfig.git
+	url = https://github.com/ViniZap4/gitconfig.git
 [submodule "modules/tmux-config"]
 	path = modules/tmux-config
-	url = git@github.com:ViniZap4/tmux-config.git
+	url = https://github.com/ViniZap4/tmux-config.git
 [submodule "modules/nvim-config"]
 	path = modules/nvim-config
-	url = git@github.com:ViniZap4/nvim-config.git
+	url = https://github.com/ViniZap4/nvim-config.git
 [submodule "modules/glide-config"]
 	path = modules/glide-config
-	url = git@github.com:ViniZap4/.glide.git
+	url = https://github.com/ViniZap4/.glide.git
