@@ -5,7 +5,7 @@ Modular dotfiles manager — each config lives in its own repo as a git submodul
 ## Bootstrap
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ViniZap4/setup/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ViniZap4/setup/feat/submodule-architecture/install.sh | bash
 ```
 
 The script detects your OS/arch, installs Go if missing, clones the repo, builds the binary, and launches the TUI.
