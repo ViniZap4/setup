@@ -1,0 +1,34 @@
+name: dev-tools
+description: Essential dev tools — ncdu, lazydocker, docker, vim
+platforms:
+  - macos
+  - linux
+links: []
+dependencies:
+  brew:
+    - ncdu
+    - lazydocker
+    - docker
+    - docker-compose
+    - vim
+  apt:
+    - ncdu
+    - vim
+    - docker.io
+    - docker-compose
+  pacman:
+    - ncdu
+    - vim
+    - docker
+    - docker-compose
+    - lazydocker
+  dnf:
+    - ncdu
+    - vim
+    - docker
+    - docker-compose
+  zypper:
+    - ncdu
+    - vim
+    - docker
+    - docker-compose
