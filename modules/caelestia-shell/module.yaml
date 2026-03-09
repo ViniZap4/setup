@@ -1,0 +1,16 @@
+name: caelestia-shell
+description: Caelestia desktop shell for Hyprland — bar, launcher, notifications, lock screen
+platforms:
+  - linux
+architectures:
+  - amd64
+dependencies:
+  pacman:
+    - quickshell-git
+    - networkmanager
+    - pipewire
+    - brightnessctl
+    - lm_sensors
+    - libqalculate
+  nix:
+    - quickshell

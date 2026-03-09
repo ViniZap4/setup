@@ -17,6 +17,15 @@ const (
 	Unknown OS = "unknown"
 )
 
+// Arch represents the detected CPU architecture.
+type Arch string
+
+const (
+	AMD64       Arch = "amd64"
+	ARM64       Arch = "arm64"
+	UnknownArch Arch = "unknown"
+)
+
 // PackageManager represents the detected package manager.
 type PackageManager string
 
@@ -46,6 +55,18 @@ func DetectOS() OS {
 	}
 }
 
+// DetectArch returns the current CPU architecture.
+func DetectArch() Arch {
+	switch runtime.GOARCH {
+	case "amd64":
+		return AMD64
+	case "arm64":
+		return ARM64
+	default:
+		return UnknownArch
+	}
+}
+
 // DetectPackageManager returns the available package manager.
 func DetectPackageManager() PackageManager {
 	managers := []struct {
@@ -69,11 +90,27 @@ func DetectPackageManager() PackageManager {
 	return NonePM
 }
 
-// SupportsModule checks if the current OS is in the module's platform list.
-func SupportsModule(platforms []string) bool {
+// SupportsModule checks if the current OS and architecture match the module's requirements.
+func SupportsModule(platforms []string, architectures []string) bool {
 	current := DetectOS()
+	platformOK := false
 	for _, p := range platforms {
 		if OS(p) == current || (current == WSL && OS(p) == Linux) {
+			platformOK = true
+			break
+		}
+	}
+	if !platformOK {
+		return false
+	}
+
+	if len(architectures) == 0 {
+		return true
+	}
+
+	currentArch := DetectArch()
+	for _, a := range architectures {
+		if Arch(a) == currentArch {
 			return true
 		}
 	}

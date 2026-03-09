@@ -20,7 +20,6 @@ func main() {
 		return
 	}
 
-	// TUI mode
 	app := tui.NewApp(modulesDir)
 	p := tea.NewProgram(app, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -30,21 +29,23 @@ func main() {
 }
 
 func findModulesDir() string {
-	// Look for modules/ relative to the binary
 	exe, err := os.Executable()
 	if err == nil {
 		dir := filepath.Join(filepath.Dir(exe), "..", "modules")
 		if info, err := os.Stat(dir); err == nil && info.IsDir() {
+			abs, err := filepath.Abs(dir)
+			if err == nil {
+				return abs
+			}
 			return dir
 		}
 	}
 
-	// Try relative to cwd
 	if info, err := os.Stat("modules"); err == nil && info.IsDir() {
-		return "modules"
+		abs, _ := filepath.Abs("modules")
+		return abs
 	}
 
-	// Try ~/setup/modules
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, "setup", "modules")
 }
@@ -81,7 +82,7 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  setup                    # interactive TUI")
-	fmt.Println("  setup install            # install all modules")
+	fmt.Println("  setup install            # install all supported modules")
 	fmt.Println("  setup install zsh-config # install specific module")
 	fmt.Println("  setup status             # show symlink status")
 }
@@ -94,8 +95,9 @@ func cmdStatus(modulesDir string) {
 	}
 
 	detectedOS := platform.DetectOS()
+	arch := platform.DetectArch()
 	pm := platform.DetectPackageManager()
-	fmt.Printf("OS: %s | Package Manager: %s\n\n", detectedOS, pm)
+	fmt.Printf("OS: %s | Arch: %s | Package Manager: %s\n\n", detectedOS, arch, pm)
 
 	for _, mod := range modules {
 		status := module.GetStatus(mod)
@@ -108,6 +110,7 @@ func cmdStatus(modulesDir string) {
 
 		supported := ""
 		if !status.Supported {
+			icon = "⊘"
 			supported = " (unsupported platform)"
 		}
 
@@ -132,6 +135,10 @@ func cmdInstall(modulesDir string) {
 	}
 
 	for _, mod := range modules {
+		if !module.IsSupported(mod) {
+			fmt.Printf("  ⊘ %s (unsupported platform, skipping)\n", mod.Config.Name)
+			continue
+		}
 		fmt.Printf("Installing %s...\n", mod.Config.Name)
 		if err := module.Install(mod); err != nil {
 			fmt.Fprintf(os.Stderr, "  ✖ %s: %v\n", mod.Config.Name, err)
@@ -154,6 +161,10 @@ func cmdLink(modulesDir string) {
 	}
 
 	for _, mod := range modules {
+		if !module.IsSupported(mod) {
+			fmt.Printf("  ⊘ %s (unsupported platform, skipping)\n", mod.Config.Name)
+			continue
+		}
 		fmt.Printf("Linking %s...\n", mod.Config.Name)
 		if err := module.Link(mod); err != nil {
 			fmt.Fprintf(os.Stderr, "  ✖ %s: %v\n", mod.Config.Name, err)
@@ -179,7 +190,7 @@ func cmdUpdate(modulesDir string) {
 }
 
 func filterModules(modules []module.Module, names []string) []module.Module {
-	nameSet := make(map[string]bool)
+	nameSet := make(map[string]bool, len(names))
 	for _, n := range names {
 		nameSet[n] = true
 	}

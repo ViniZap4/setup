@@ -156,13 +156,15 @@ func (a App) updateSelector(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "a":
 			allSelected := true
 			for _, item := range a.selector.items {
-				if !item.selected {
+				if item.supported && !item.selected {
 					allSelected = false
 					break
 				}
 			}
 			for i := range a.selector.items {
-				a.selector.items[i].selected = !allSelected
+				if a.selector.items[i].supported {
+					a.selector.items[i].selected = !allSelected
+				}
 			}
 		case "enter":
 			selected := a.selector.GetSelected()

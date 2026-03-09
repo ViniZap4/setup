@@ -1,0 +1,30 @@
+name: hyprland-config
+description: Hyprland wayland compositor — tiling WM for Linux
+platforms:
+  - linux
+links:
+  - source: hyprland.conf
+    target: ~/.config/hypr/hyprland.conf
+dependencies:
+  pacman:
+    - hyprland
+    - kitty
+    - wofi
+    - waybar
+    - hyprpaper
+  dnf:
+    - hyprland
+    - kitty
+    - wofi
+    - waybar
+  zypper:
+    - hyprland
+    - kitty
+    - wofi
+    - waybar
+  apt:
+    - kitty
+    - wofi
+    - waybar
+  nix:
+    - hyprland

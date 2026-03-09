@@ -47,7 +47,7 @@ func Discover(modulesDir string) ([]Module, error) {
 		manifestPath := filepath.Join(modulesDir, entry.Name(), "module.yaml")
 		cfg, err := config.Load(manifestPath)
 		if err != nil {
-			continue // skip directories without valid module.yaml
+			continue
 		}
 
 		modules = append(modules, Module{
@@ -59,11 +59,16 @@ func Discover(modulesDir string) ([]Module, error) {
 	return modules, nil
 }
 
+// IsSupported checks if the module is supported on the current platform and architecture.
+func IsSupported(m Module) bool {
+	return platform.SupportsModule(m.Config.Platforms, m.Config.Architectures)
+}
+
 // GetStatus checks the symlink status of a module.
 func GetStatus(m Module) ModuleStatus {
 	status := ModuleStatus{
 		Name:      m.Config.Name,
-		Supported: platform.SupportsModule(m.Config.Platforms),
+		Supported: IsSupported(m),
 	}
 
 	for _, link := range m.Config.Links {
@@ -91,9 +96,12 @@ func IsFullyLinked(status ModuleStatus) bool {
 
 // Install runs the module's install.sh script.
 func Install(m Module) error {
+	if !IsSupported(m) {
+		return fmt.Errorf("unsupported platform")
+	}
+
 	scriptPath := filepath.Join(m.Path, "install.sh")
 	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
-		// No install script, just create symlinks
 		return Link(m)
 	}
 
@@ -106,6 +114,10 @@ func Install(m Module) error {
 
 // Link creates all symlinks for a module without running install.sh.
 func Link(m Module) error {
+	if !IsSupported(m) {
+		return fmt.Errorf("unsupported platform")
+	}
+
 	for _, link := range m.Config.Links {
 		source := filepath.Join(m.Path, link.Source)
 		if err := symlink.SafeLink(source, link.Target); err != nil {

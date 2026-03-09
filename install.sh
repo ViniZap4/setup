@@ -13,7 +13,7 @@ BOLD='\033[1m'
 REPO_URL="https://github.com/ViniZap4/setup.git"
 SETUP_DIR="$HOME/setup"
 GO_VERSION="1.24.2"
-TOTAL_STEPS=4
+TOTAL_STEPS=5
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 step() {
@@ -37,7 +37,7 @@ dim() {
     printf "  ${DIM}%s${RESET}\n" "$1"
 }
 
-# ── Detect OS and architecture ───────────────────────────────────────────────
+# ── Detect OS, architecture, and package manager ────────────────────────────
 detect_platform() {
     case "$(uname -s)" in
         Darwin) OS="macos" ;;
@@ -58,16 +58,56 @@ detect_platform() {
     esac
 }
 
+detect_pm() {
+    if command -v brew &>/dev/null; then PM="brew"
+    elif command -v apt &>/dev/null; then PM="apt"
+    elif command -v pacman &>/dev/null; then PM="pacman"
+    elif command -v dnf &>/dev/null; then PM="dnf"
+    elif command -v zypper &>/dev/null; then PM="zypper"
+    elif command -v nix-env &>/dev/null; then PM="nix"
+    else PM="unknown"
+    fi
+}
+
 # ── Step 1: Detect platform ─────────────────────────────────────────────────
 step1_platform() {
     step 1 "Detecting platform"
     detect_platform
-    ok "$OS ($ARCH)"
+    detect_pm
+    ok "$OS ($ARCH) — $PM"
 }
 
-# ── Step 2: Install Go ──────────────────────────────────────────────────────
-step2_go() {
-    step 2 "Ensuring Go $GO_VERSION is installed"
+# ── Step 2: Install prerequisites ───────────────────────────────────────────
+step2_prerequisites() {
+    step 2 "Checking prerequisites"
+
+    local missing=()
+
+    command -v git &>/dev/null || missing+=("git")
+    command -v curl &>/dev/null || missing+=("curl")
+    command -v make &>/dev/null || missing+=("make")
+
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        ok "All prerequisites found (git, curl, make)"
+        return
+    fi
+
+    dim "Installing: ${missing[*]}"
+    case "$PM" in
+        brew)   brew install "${missing[@]}" ;;
+        apt)    sudo apt-get update -qq && sudo apt-get install -y -qq "${missing[@]}" ;;
+        pacman) sudo pacman -S --noconfirm --needed "${missing[@]}" ;;
+        dnf)    sudo dnf install -y "${missing[@]}" ;;
+        zypper) sudo zypper install -y "${missing[@]}" ;;
+        nix)    for pkg in "${missing[@]}"; do nix-env -iA "nixpkgs.$pkg"; done ;;
+        *)      fail "Cannot install ${missing[*]}: unknown package manager. Install them manually." ;;
+    esac
+    ok "Prerequisites installed"
+}
+
+# ── Step 3: Install Go ──────────────────────────────────────────────────────
+step3_go() {
+    step 3 "Ensuring Go $GO_VERSION is installed"
 
     if command -v go &>/dev/null; then
         CURRENT_GO=$(go version | awk '{print $3}' | sed 's/go//')
@@ -85,12 +125,11 @@ step2_go() {
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             fi
             dim "Installing Go via Homebrew..."
-            brew install go@${GO_VERSION%.*} || brew upgrade go@${GO_VERSION%.*} || true
-            brew link --overwrite go@${GO_VERSION%.*} 2>/dev/null || true
+            brew install go 2>/dev/null || brew upgrade go 2>/dev/null || true
             ;;
         linux|wsl)
             GO_TAR="go${GO_VERSION}.linux-${ARCH}.tar.gz"
-            dim "Downloading Go $GO_VERSION..."
+            dim "Downloading Go $GO_VERSION for linux/${ARCH}..."
             curl -fsSL "https://go.dev/dl/${GO_TAR}" -o "/tmp/${GO_TAR}"
             dim "Installing to /usr/local/go..."
             sudo rm -rf /usr/local/go
@@ -107,9 +146,9 @@ step2_go() {
     fi
 }
 
-# ── Step 3: Clone or update repo ────────────────────────────────────────────
-step3_repo() {
-    step 3 "Setting up repository"
+# ── Step 4: Clone or update repo ────────────────────────────────────────────
+step4_repo() {
+    step 4 "Setting up repository"
 
     if [ -d "$SETUP_DIR/.git" ]; then
         dim "Pulling latest changes..."
@@ -123,9 +162,9 @@ step3_repo() {
     fi
 }
 
-# ── Step 4: Build and install ────────────────────────────────────────────────
-step4_build() {
-    step 4 "Building setup binary"
+# ── Step 5: Build and install ────────────────────────────────────────────────
+step5_build() {
+    step 5 "Building setup binary"
 
     cd "$SETUP_DIR"
 
@@ -148,9 +187,10 @@ main() {
     printf "\n${MAUVE}${BOLD}setup${RESET} ${DIM}— modular dotfiles manager${RESET}\n"
 
     step1_platform
-    step2_go
-    step3_repo
-    step4_build
+    step2_prerequisites
+    step3_go
+    step4_repo
+    step5_build
 
     printf "\n${GREEN}${BOLD}Done!${RESET} Launching setup TUI...\n\n"
     exec "$SETUP_DIR/bin/setup"

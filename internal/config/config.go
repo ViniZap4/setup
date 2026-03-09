@@ -24,11 +24,12 @@ type Dependencies struct {
 
 // ModuleConfig is the parsed module.yaml manifest.
 type ModuleConfig struct {
-	Name         string       `yaml:"name"`
-	Description  string       `yaml:"description"`
-	Platforms    []string     `yaml:"platforms"`
-	Links        []Link       `yaml:"links"`
-	Dependencies Dependencies `yaml:"dependencies"`
+	Name           string       `yaml:"name"`
+	Description    string       `yaml:"description"`
+	Platforms      []string     `yaml:"platforms"`
+	Architectures  []string     `yaml:"architectures,omitempty"`
+	Links          []Link       `yaml:"links"`
+	Dependencies   Dependencies `yaml:"dependencies"`
 }
 
 // Load reads and parses a module.yaml file.

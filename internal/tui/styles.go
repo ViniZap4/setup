@@ -67,11 +67,6 @@ var (
 	StatusMissing  = lipgloss.NewStyle().Foreground(Yellow)
 	StatusConflict = lipgloss.NewStyle().Foreground(Red)
 
-	BoxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(Surface1).
-			Padding(1, 2)
-
 	HelpStyle = lipgloss.NewStyle().
 			Foreground(Overlay0).
 			MarginTop(1)

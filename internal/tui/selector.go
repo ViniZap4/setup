@@ -8,8 +8,9 @@ import (
 
 // SelectorItem represents a module in the multi-select list.
 type SelectorItem struct {
-	module   module.Module
-	selected bool
+	module    module.Module
+	selected  bool
+	supported bool
 }
 
 // SelectorModel is the module multi-select screen.
@@ -22,7 +23,12 @@ type SelectorModel struct {
 func NewSelectorModel(modules []module.Module) SelectorModel {
 	items := make([]SelectorItem, len(modules))
 	for i, m := range modules {
-		items[i] = SelectorItem{module: m, selected: true}
+		supported := module.IsSupported(m)
+		items[i] = SelectorItem{
+			module:    m,
+			selected:  supported,
+			supported: supported,
+		}
 	}
 	return SelectorModel{items: items}
 }
@@ -60,6 +66,10 @@ func (m SelectorModel) View() string {
 		}
 
 		desc := DimStyle.Render(" — " + item.module.Config.Description)
+		if !item.supported {
+			name = DimStyle.Render(item.module.Config.Name)
+			desc = DimStyle.Render(" — unsupported platform")
+		}
 
 		s += fmt.Sprintf("  %s%s %s%s\n", cursor, check, name, desc)
 	}
